@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "terminal-market-data": {
+      "command": "node",
+      "args": ["mcp-server/index.ts"],
+      "env": {
+        "TERMINAL_API_URL": "http://localhost:3000"
+      }
+    }
+  }
+}

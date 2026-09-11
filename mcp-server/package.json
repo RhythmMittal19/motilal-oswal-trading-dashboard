@@ -1,0 +1,14 @@
+{
+  "name": "terminal-mcp-server",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Dev-time MCP server exposing the Trading Dashboard's market data to an AI assistant.",
+  "scripts": {
+    "start": "node index.ts"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/server": "^2.0.0",
+    "zod": "^4.6.2"
+  }
+}
