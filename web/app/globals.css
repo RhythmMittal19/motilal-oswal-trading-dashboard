@@ -1,0 +1,101 @@
+@import "tailwindcss";
+
+/* Literal values, so these are emitted as real CSS variables that the
+   keyframes below can reference. */
+@theme {
+  --color-canvas: #0a0c10;
+  --color-surface: #12151c;
+  --color-elevated: #1a1e27;
+  --color-line: #232936;
+  --color-ink: #e8ebf0;
+  --color-muted: #8a94a6;
+
+  /* Semantic only. Green and red mean price direction and nothing else. */
+  --color-up: #0ecb81;
+  --color-down: #f6465d;
+
+  /* Interactive: selection, focus. Deliberately not green or red. */
+  --color-accent: #4a7dff;
+}
+
+/* `inline` because these point at the variables next/font generates. */
+@theme inline {
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+}
+
+body {
+  background: var(--color-canvas);
+  color: var(--color-ink);
+}
+
+/* Prices are read by comparing them down a column, so the digits have to line
+   up. Proportional numerals also make the row visibly jitter on every tick. */
+.tnum {
+  font-variant-numeric: tabular-nums;
+}
+
+/* The signature of every real trading screen: a cell flashes on the direction
+   of its move, then fades back. */
+@keyframes flash-up {
+  from {
+    background-color: color-mix(in oklab, var(--color-up) 18%, transparent);
+  }
+  to {
+    background-color: transparent;
+  }
+}
+
+@keyframes flash-down {
+  from {
+    background-color: color-mix(in oklab, var(--color-down) 18%, transparent);
+  }
+  to {
+    background-color: transparent;
+  }
+}
+
+.flash-up {
+  animation: flash-up 600ms ease-out;
+}
+
+.flash-down {
+  animation: flash-down 600ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .flash-up,
+  .flash-down {
+    animation: none;
+  }
+}
+
+@keyframes shimmer {
+  0%,
+  100% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 0.75;
+  }
+}
+
+.shimmer {
+  animation: shimmer 1.4s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shimmer {
+    animation: none;
+  }
+}
+
+/* The half-visible card at the edge is the scroll affordance; the bar itself
+   is just noise on a strip this short. */
+.no-scrollbar {
+  scrollbar-width: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
