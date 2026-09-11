@@ -1,0 +1,160 @@
+
+########## CONTENT STREAM obj 1 ##########
+AI ROUND – SOFTWARE ENGINEER (FRESHER)
+Trading Dashboard – Practical Coding Assignment
+Scenario
+You are joining a fintech team developing a simplified 
+Trading Dashboard
+ for retail investors.
+As part of this AI coding round, you need to build the same core experience for:
+Web:
+ Next.js
+Mobile:
+ React Native
+You may use AI tools such as ChatGPT, GitHub Copilot, Claude, Amazon Q, or any other coding assistant.
+1. Web Application – Next.js
+Build a responsive Trading Dashboard using 
+Next.js + TypeScript
+.
+The dashboard should include:
+Market Overview
+Display:
+NIFTY 50
+SENSEX
+One additional index
+Show current value, change, percentage change, and market status.
+Watchlist
+Create a watchlist containing at least 
+6 stocks
+.
+Display:
+Stock symbol
+Company name
+Current price
+Price change
+Percentage change
+Live / Simulated Prices
+Use any of the following:
+Free/public API
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+1
+
+########## CONTENT STREAM obj 6 ##########
+Dummy API
+Mock JSON data
+Locally simulated price updates
+Prices should update periodically to simulate live market data.
+Search & Stock Details
+Allow users to:
+Search stocks by name or symbol
+Select a stock
+View price and percentage change
+View a simple intraday price chart
+Application States
+Handle:
+Loading
+API/data failure
+No search results
+Empty data
+2. Mobile Application – React Native
+Build the same core Trading Dashboard experience using 
+React Native
+.
+The mobile application should include:
+Market overview
+Watchlist
+Stock search
+Stock details
+Current price
+Price change
+Percentage change
+Intraday chart
+Simulated/live price updates
+Loading and error states
+The UI should follow 
+mobile-friendly design and interaction patterns
+.
+3. AI Usage
+This is an 
+AI Coding Round
+, so you are expected to use an AI coding assistant.
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+2
+
+########## CONTENT STREAM obj 8 ##########
+You should be able to explain:
+How you used AI during development
+Why you selected your technical approach
+How you verified AI-generated code
+Any issues found in AI-generated code
+How you debugged or improved the solution
+Do not blindly copy and paste AI-generated code.
+ You should understand and explain your
+implementation.
+4. Final Submission
+Submit:
+Working 
+Next.js application
+Working 
+React Native application
+Git repository/source code
+README containing:
+Setup instructions
+How to run the projects
+API/data source
+Key assumptions
+Libraries used
+Known limitations
+Also mention which AI tools you used and how they helped during development.
+5. Suggested Duration
+Total: 90–120 minutes
+The solution does not need to be production-ready.
+Focus on:
+Problem solving • Coding fundamentals • UI implementation • API/data handling • Debugging •
+Effective AI usage
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+• 
+3
