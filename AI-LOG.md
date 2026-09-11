@@ -265,6 +265,61 @@ user something false about their own actions.
 
 ---
 
+## 11 — A malformed API response took the whole app down
+
+**Feature:** The typed fetch client.
+
+**What happened:** Found by deliberately attacking the app rather than using it.
+I replaced `window.fetch` so `/api/market` returned a **200** with a payload
+missing its arrays, and watched what the UI did.
+
+**Problem discovered:** The entire app died.
+
+```
+Uncaught TypeError: next.indices is not iterable
+-> "This page couldn't load"   (<main> gone, 0 rows rendered)
+```
+
+The cause was one line in `lib/api.ts`:
+
+```ts
+return { ok: true, data: (await response.json()) as T };
+```
+
+`as T` is an assertion, not a check. It tells the compiler to stop asking
+questions; it validates nothing at runtime. So a response that was *shaped*
+wrongly sailed straight through the typed client and blew up several layers
+later, inside `tickDirections`, far from the actual cause.
+
+The irony: the file already did this correctly for **failures** — `isApiError`
+is a real type guard. Only the success path was trusted blindly.
+
+**How it was fixed:** Added matching guards, `isMarketSnapshot` and
+`isPricePoints`, and made `getJson` take the validator as an argument:
+
+```ts
+const body: unknown = await response.json();
+if (!isValid(body)) {
+  return { ok: false, error: { code: "INVALID_RESPONSE", ... } };
+}
+```
+
+**Verified by re-running the identical attack.** Same malformed payload, and
+now: zero page errors, `<main>` intact, and the header showing
+**"Reconnecting…"** with the last good prices still on screen — the `stale`
+path the app was designed to use. Fifteen tests were added so it cannot
+regress, covering null, arrays, strings, `NaN` prices, missing fields and an
+unknown market status.
+
+**What I learned:** TypeScript stops at the network boundary. Anything crossing
+it — a response body, `localStorage`, a URL parameter — is `unknown` no matter
+what the annotation says, and a cast is a claim rather than a check. The bug was
+invisible to `tsc`, to ESLint, to all 27 existing tests and to every minute of
+clicking around, because the real server never misbehaves. Only attacking it
+found it.
+
+---
+
 ## Summary
 
 | # | Found by | Would other checks have caught it? |
@@ -279,7 +334,10 @@ user something false about their own actions.
 | 8 | Looking at the screen | No — mathematically valid output |
 | 9 | Comparing two screenshots | No — needs elapsed time to appear |
 | 10 | Clicking through the demo | No — needs a specific interaction order |
+| 11 | Attacking the app with a faked response | No — the real server never sends a bad shape |
 
-Four different verification methods, and **each one caught bugs the others
+Five different verification methods, and **each one caught bugs the others
 could not**. The screen caught three that no automated check would have; the
-tests caught one that no amount of watching would have.
+tests caught one that no amount of watching would have; and deliberately
+attacking the app caught one that nothing else could, because it only appears
+when a dependency misbehaves in a way the real one never does.

@@ -193,8 +193,10 @@ run faster whenever a second browser tab was open.
   duplication, but Metro's symlink resolution is a known time sink and was not
   worth the risk inside a two-hour budget. In a longer-lived project this is
   the first thing I would change.
-- **Tests cover the simulation and formatting only.** Component tests would be
-  the next addition; the pure logic is where the real bugs were.
+- **Tests cover logic, not components.** 42 tests across the simulation, market
+  hours, search, formatting and API response validation. Component and
+  end-to-end tests would be the next addition; the pure logic and the network
+  boundary are where the real bugs were.
 - **Accessibility is good, not audited.** Colour is never the only signal
   (arrows and signs carry direction too), controls are real buttons, and the
   flash respects `prefers-reduced-motion` — but no screen-reader pass was done.
@@ -222,15 +224,19 @@ both was checked against primary sources before being used (see below).
 
 ### How AI-generated code was verified
 
-Four separate gates, in order of how much they actually caught:
+Five separate gates, in order of how much they actually caught:
 
 1. **Tests on the pure logic.** The simulation is a pure function, so it could
    be tested directly. This caught the biggest bug in the project.
-2. **Running the API with `curl` before any UI existed.** Reading the raw JSON
+2. **Attacking it on purpose.** Faking a malformed API response, hostile search
+   input and out-of-order requests. This found a crash nothing else could: a
+   bad payload took the whole app down, because `as T` is an assertion rather
+   than a check.
+3. **Running the API with `curl` before any UI existed.** Reading the raw JSON
    caught two contract problems the UI would have hidden.
-3. **Looking at the rendered page.** Two bugs were only visible on screen and
+4. **Looking at the rendered page.** Two bugs were only visible on screen and
    would have passed every automated check.
-4. **`tsc --noEmit` and ESLint on every change.** ESLint's `react-hooks` rules
+5. **`tsc --noEmit` and ESLint on every change.** ESLint's `react-hooks` rules
    caught a genuine React anti-pattern that worked fine but re-rendered twice.
 
 Primary sources were read rather than trusted to recall in two places:
@@ -240,7 +246,7 @@ plausible-looking broken code.
 
 ### Bugs AI introduced, and how they were debugged
 
-Ten, recorded honestly in **[`AI-LOG.md`](AI-LOG.md)** with the symptom, the
+Eleven, recorded honestly in **[`AI-LOG.md`](AI-LOG.md)** with the symptom, the
 root cause, and the fix for each. The most interesting ones:
 
 - A random walk with no anchor, which drifted SBIN to −9.6% over a simulated
@@ -249,6 +255,9 @@ root cause, and the fix for each. The most interesting ones:
   `-0 < 0` is `false` in JavaScript.
 - A chart that looked like static rather than a price, because each step was
   independent of the last.
+- A malformed API response crashing the whole app, because `as T` is an
+  assertion rather than a check. Found by faking a bad response on purpose;
+  fixed with real runtime guards at the network boundary.
 
 ---
 

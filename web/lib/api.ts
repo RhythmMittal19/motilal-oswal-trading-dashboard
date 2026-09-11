@@ -1,4 +1,4 @@
-import type { ApiError, MarketSnapshot, PricePoint } from "@/types/market";
+import type { ApiError, MarketSnapshot, PricePoint, Quote } from "@/types/market";
 
 const REQUEST_TIMEOUT_MS = 8000;
 
@@ -25,7 +25,59 @@ function isApiError(value: unknown): value is ApiError {
   );
 }
 
-async function getJson<T>(path: string, signal: AbortSignal): Promise<Result<T>> {
+/**
+ * The server is a separate program, so its success payloads are untrusted too.
+ * `as T` only silences the compiler; a malformed 200 response used to take the
+ * whole app down with "next.indices is not iterable" instead of showing the
+ * error state.
+ */
+function isQuote(value: unknown): value is Quote {
+  const quote = value as Quote;
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    typeof quote.symbol === "string" &&
+    typeof quote.name === "string" &&
+    Number.isFinite(quote.price) &&
+    Number.isFinite(quote.change) &&
+    Number.isFinite(quote.changePercent)
+  );
+}
+
+export function isMarketSnapshot(value: unknown): value is MarketSnapshot {
+  const snapshot = value as MarketSnapshot;
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    Array.isArray(snapshot.indices) &&
+    snapshot.indices.every(isQuote) &&
+    Array.isArray(snapshot.stocks) &&
+    snapshot.stocks.every(isQuote) &&
+    ["OPEN", "CLOSED", "PRE_OPEN"].includes(snapshot.status) &&
+    typeof snapshot.asOf === "string"
+  );
+}
+
+export function isPricePoints(value: unknown): value is PricePoint[] {
+  return (
+    Array.isArray(value) &&
+    value.every((point) => {
+      const candidate = point as PricePoint;
+      return (
+        typeof point === "object" &&
+        point !== null &&
+        typeof candidate.time === "string" &&
+        Number.isFinite(candidate.price)
+      );
+    })
+  );
+}
+
+async function getJson<T>(
+  path: string,
+  signal: AbortSignal,
+  isValid: (value: unknown) => value is T,
+): Promise<Result<T>> {
   try {
     const response = await fetch(path, {
       // Prices must never come from a cache.
@@ -46,7 +98,18 @@ async function getJson<T>(path: string, signal: AbortSignal): Promise<Result<T>>
       };
     }
 
-    return { ok: true, data: (await response.json()) as T };
+    const body: unknown = await response.json();
+    if (!isValid(body)) {
+      return {
+        ok: false,
+        error: {
+          code: "INVALID_RESPONSE",
+          message: "The market data service returned data in an unexpected shape.",
+        },
+      };
+    }
+
+    return { ok: true, data: body };
   } catch {
     // An abort is a normal part of cleanup, not a failure worth showing.
     if (signal.aborted) {
@@ -66,9 +129,10 @@ export function fetchMarket(
   signal: AbortSignal,
   simulateFailure = false,
 ): Promise<Result<MarketSnapshot>> {
-  return getJson<MarketSnapshot>(
+  return getJson(
     `/api/market${simulateFailure ? "?fail=1" : ""}`,
     signal,
+    isMarketSnapshot,
   );
 }
 
@@ -76,5 +140,9 @@ export function fetchHistory(
   symbol: string,
   signal: AbortSignal,
 ): Promise<Result<PricePoint[]>> {
-  return getJson<PricePoint[]>(`/api/history/${encodeURIComponent(symbol)}`, signal);
+  return getJson(
+    `/api/history/${encodeURIComponent(symbol)}`,
+    signal,
+    isPricePoints,
+  );
 }
